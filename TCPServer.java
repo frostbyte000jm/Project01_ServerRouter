@@ -1,3 +1,5 @@
+import java.awt.*;
+import java.beans.Encoder;
 import java.io.*;
 import java.net.*;
 
@@ -33,28 +35,69 @@ public class TCPServer {
         }
 
         // Variables for message passing
-        String fromServer; // messages sent to ServerRouter
-        String fromClient; // messages received from ServerRouter
-        String address = ServerNames.getClientAddress(); //JM 2021.10.2 - was: "10.5.3.196"; // destination IP (Client)
+        Reader reader = new FileReader("data/drop.avi");
+        FileWriter fw = new FileWriter(ServerNames.getVidFile());
+        BufferedReader fromFile =  new BufferedReader(reader); // reader for the string file
+        BufferedWriter toFile = new BufferedWriter(fw);
+        String fromServerRouter; // messages received from ServerRouter
+        String fromHere; // messages sent to ServerRouter
+        String address = ServerNames.getServerAddress(); //JM 2021.10.2 - was: "10.5.2.109"; // destination IP (Server)
+        long t0, t1, t;
+        boolean doWriteToFile = false;
+        boolean doFirstLine = true;
 
         // Communication process (initial sends/receives)
-        out.println(address);// initial send (IP of the destination Client)
-        fromClient = in.readLine();// initial receive from router (verification of connection)
-        System.out.println("ServerRouter: " + fromClient);
+        out.println(address);// initial send (IP of the destination Server)
+        fromServerRouter = in.readLine();//initial receive from router (verification of connection)
+        System.out.println("ServerRouter: " + fromServerRouter);
+        out.println(localIPAddress); // Client sends the IP of its machine as initial send //JM 2021.10.2 revised with updated name
+        t0 = System.currentTimeMillis();
 
         // Communication while loop
-        while ((fromClient = in.readLine()) != null) {
-            System.out.println("Client said: " + fromClient);
-            if (fromClient.equals("Bye.")) // exit statement
+        while ((fromServerRouter = in.readLine()) != null) {
+            System.out.println("Server Router: " + fromServerRouter);
+            //start timer
+            t1 = System.currentTimeMillis();
+            if (fromServerRouter.equals("Bye.")) // exit statement
                 break;
-            fromServer = fromClient.toUpperCase(); // converting received message to upper case
-            System.out.println("Server said: " + fromServer);
-            out.println(fromServer); // sending the converted message back to the Client via ServerRouter
+            if (doWriteToFile){
+                if (doFirstLine) {
+                    doFirstLine = false;
+                } else {
+                    toFile.newLine();
+                }
+                toFile.write(fromServerRouter);
+            }
+            // stop and print timer
+            t = t1 - t0;
+            System.out.println("Cycle time: " + t);
+
+            // send to Server
+            fromHere = fromFile.    readLine(); // reading strings from a file
+            doWriteToFile = true;
+            if (fromHere != null) {
+                System.out.println("Server: " + fromHere);
+                out.println(fromHere); // sending the strings to the Server via ServerRouter
+                t0 = System.currentTimeMillis();
+            } else {
+                System.out.println("Client: Good Bye");
+                out.println("Bye."); // sending the strings to the Server via ServerRouter
+                t0 = System.currentTimeMillis();
+            }
         }
 
         // closing connections
+        fromFile.close();
+        toFile.close();
         out.close();
         in.close();
         Socket.close();
+
+        //Load File
+        File file = new File(ServerNames.getVidFile());
+        if (file.exists()){
+            Desktop desktop = Desktop.getDesktop();
+            desktop.open(file);
+        }
     }
 }

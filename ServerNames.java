@@ -11,6 +11,9 @@ public class ServerNames {
     private static String routerName = "DESKTOP-DEOBPOO";
     private static String serverAddress = "192.168.1.120";
     private static String clientAddress = "192.168.1.120";
+    private static String textFile = "C:\\Temp\\file.txt";
+    private static String vidFile = "C:\\Temp\\drop.avi";
+
 
     public static String getRouterName() {
         return routerName;
@@ -22,5 +25,13 @@ public class ServerNames {
 
     public static String getClientAddress() {
         return clientAddress;
+    }
+
+    public static String getTextFile() {
+        return textFile;
+    }
+
+    public static String getVidFile() {
+        return vidFile;
     }
 }
